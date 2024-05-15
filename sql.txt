@@ -1,0 +1,8 @@
+
+create databse bk_coffeeshop;
+
+INSERT INTO role (id, name) VALUES 
+(1, 'admin'),
+(2, 'employee'),
+(3, 'manager'),
+(4,'user');
