@@ -50,7 +50,7 @@ export class AuthService {
     account.isActive = true;
     await this.accountRepository.save(account); //generate token
 
-    const token = await this.jwtService.signAsync(payload); 
+    const token = await this.jwtService.signAsync(payload);
 
     const resultResponse: ResultResponse<any> = {
       message: 'Login successfully',
@@ -61,12 +61,17 @@ export class AuthService {
   }
 
   async signUp(accountRequest: AccountRequest) {
-    const deafault = { id: 4, name: 'user' };
-    const role = await this.roleRepository.findOneBy(deafault);
+    const deafaultRole = { id: 4, name: 'user' };
+    const role = await this.roleRepository.findOneBy(deafaultRole);
     if (!role) {
       throw new BadRequestException('role not found');
     }
     const hash = await bcrypt.hash(accountRequest.password, 10);
+    if (
+      await this.accountRepository.existsBy({ email: accountRequest.email })
+    ) {
+      throw new BadRequestException('email is already used');
+    }
     const Account = this.accountRepository.create({
       email: accountRequest.email,
       fullName: accountRequest.fullName,
@@ -74,16 +79,28 @@ export class AuthService {
       role: role,
     });
     const newAccount = await this.accountRepository.save(Account);
-    const resultResponse: ResultResponse<Account> = {
+
+    const accountResponse: AccountResponse = {
+      id: newAccount.id,
+      fullName: newAccount.fullName,
+      email: newAccount.email,
+      isActive: newAccount.isActive,
+      isBlock: newAccount.isBlock,
+      role: {
+        id: newAccount.role.id,
+        name: newAccount.role.name,
+      },
+    };
+    const resultResponse: ResultResponse<AccountResponse> = {
       success: true,
       message: 'Account created successfully',
-      data: newAccount,
+      data: accountResponse,
     };
     return resultResponse;
   }
 
-  async logOut(user) {
-    const { id, email } = user.info;
+  async signOut(user) {
+    const { email } = user.info;
     const account = await this.accountRepository.findOneBy({ email: email });
     if (!account) throw new BadRequestException(`email not found`);
     account.isActive = false;

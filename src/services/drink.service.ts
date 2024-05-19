@@ -61,6 +61,36 @@ export class DrinkService {
     };
     return resultResponse;
   }
+  async getAllDrinkForEmployee(
+    query,
+  ): Promise<ResultResponse<DrinkResponse[]>> {
+    const category = query.category;
+    const whereCondition: any = {};
+    if (category) whereCondition.category.name = category;
+    const drinks = await this.drinkRepository.find({
+      relations: ['category'],
+      where: whereCondition,
+    });
+
+    let drinkResponses: DrinkResponse[] = [];
+    drinks.forEach((item) => {
+      let drinkResponse: DrinkResponse = {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        imageUrl: item.imageUrl,
+        price: item.price,
+      };
+      drinkResponses.push(drinkResponse);
+    });
+
+    const resultResponse: ResultResponse<DrinkResponse[]> = {
+      success: true,
+      message: 'get all drink for employee',
+      data: drinkResponses,
+    };
+    return resultResponse;
+  }
   async getDrink(id: number) {
     const drink = await this.drinkRepository.findOne({
       relations: ['category'],

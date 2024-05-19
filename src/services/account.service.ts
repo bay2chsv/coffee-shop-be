@@ -1,15 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AccountRequest } from 'src/dtos/Request/accountRequest.dto';
 
 import { ResultResponse } from 'src/dtos/Response/ResultResponse.dto';
 import { Account } from 'src/entitys/account.entity';
+import { Role } from 'src/entitys/role.entity';
 import { Repository } from 'typeorm';
-
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class AccountService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
   async getAllAccount(query): Promise<ResultResponse<AccountResponse[]>> {
     let accounts: Account[] = [];
@@ -104,6 +108,46 @@ export class AccountService {
     const resultResponse: ResultResponse<AccountResponse> = {
       message: 'block account',
       success: true,
+      data: accountResponse,
+    };
+    return resultResponse;
+  }
+  async createAccount(accountRequest: AccountRequest) {
+    const role = await this.roleRepository.findOneBy({
+      id: accountRequest.roleId,
+    });
+    if (!role) {
+      throw new BadRequestException('role not found');
+    }
+    if (
+      await this.accountRepository.existsBy({ email: accountRequest.email })
+    ) {
+      throw new BadRequestException('email is already used');
+    }
+    const hash = await bcrypt.hash(accountRequest.password, 10);
+
+    const Account = this.accountRepository.create({
+      email: accountRequest.email,
+      fullName: accountRequest.fullName,
+      password: hash,
+      role: role,
+    });
+    const newAccount = await this.accountRepository.save(Account);
+
+    const accountResponse: AccountResponse = {
+      id: newAccount.id,
+      fullName: newAccount.fullName,
+      email: newAccount.email,
+      isActive: newAccount.isActive,
+      isBlock: newAccount.isBlock,
+      role: {
+        id: newAccount.role.id,
+        name: newAccount.role.name,
+      },
+    };
+    const resultResponse: ResultResponse<AccountResponse> = {
+      success: true,
+      message: 'Account created successfully',
       data: accountResponse,
     };
     return resultResponse;

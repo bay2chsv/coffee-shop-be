@@ -37,25 +37,25 @@ export class AuthController {
   @Post('/signout')
   signOut(@Request() req) {
     //passed
-    return req.user;
+    return this.authService.signOut(req.user);
   }
 
   @UseGuards(AuthGuard) //if no accessToken => status 401
   @Get('/profile')
   getProfile(@Request() req) {
     //passed
-    return this.authService.getProfile(req);
+    return this.authService.getProfile(req.user);
   }
 
   @UseGuards(AuthGuard)
   @Patch('/profile/update')
   updateProfile(@Request() req, @Body() profile: ProfileRequest) {
-    return this.authService.updateProfile(req, profile);
+    return this.authService.updateProfile(req.user, profile);
   }
 
   @UseGuards(AuthGuard)
   @Patch('/profile/change-password')
   changePassword(@Request() req, @Body() profile: ProfileRequest) {
-    return this.authService.changePasswordProfile(req, profile);
+    return this.authService.changePasswordProfile(req.user, profile);
   }
 }

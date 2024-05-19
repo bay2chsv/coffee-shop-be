@@ -36,6 +36,12 @@ export class DrinkController {
     return this.drinkService.getAllDrink({ limit, page, name, category });
   }
 
+  @Get('/drinks/all')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  getAllDrinkForEmployee(@Query('category') category: string) {
+    return this.drinkService.getAllDrinkForEmployee({ category });
+  }
+
   @Get('/drinks/:id')
   getCategory(@Param('id', ParseIntPipe) id: number) {
     return this.drinkService.getDrink(id);

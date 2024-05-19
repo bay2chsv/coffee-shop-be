@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -6,6 +7,7 @@ import {
   ParseBoolPipe,
   ParseIntPipe,
   Patch,
+  Post,
   Put,
   Query,
   UseGuards,
@@ -20,6 +22,7 @@ import { Role } from 'src/roleConfig/role.enum';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { AccountService } from 'src/services/account.service';
 import { blob } from 'stream/consumers';
+import { AccountRequest } from 'src/dtos/Request/accountRequest.dto';
 
 @Controller('api/v1')
 export class AccountController {
@@ -36,7 +39,13 @@ export class AccountController {
     @Query('email') email: string,
     @Query('active') isActive: boolean,
   ) {
-    return this.accountService.getAllAccount({ limit, page, isBlock, email,isActive });
+    return this.accountService.getAllAccount({
+      limit,
+      page,
+      isBlock,
+      email,
+      isActive,
+    });
   }
 
   @Roles(Role.Admin, Role.Manager)
@@ -44,6 +53,13 @@ export class AccountController {
   @Get('/accounts/:id')
   getAccount(@Param('id', ParseIntPipe) id: number) {
     return this.accountService.getAccount(id);
+  }
+
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Post('/accounts')
+  createAccount(@Body() accountRequest: AccountRequest) {
+    return this.accountService.createAccount(accountRequest);
   }
 
   @Roles(Role.Admin, Role.Manager)
