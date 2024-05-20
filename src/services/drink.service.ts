@@ -29,7 +29,10 @@ export class DrinkService {
     const whereCondition: any = {};
 
     if (name) whereCondition.name = name;
-    if (category) whereCondition.category.name = category;
+    if (category) {
+      whereCondition.category = {};
+      whereCondition.category.name = category;
+    }
     const [drinks, totalItem] = await this.drinkRepository.findAndCount({
       relations: ['category'],
       where: whereCondition,
@@ -66,7 +69,10 @@ export class DrinkService {
   ): Promise<ResultResponse<DrinkResponse[]>> {
     const category = query.category;
     const whereCondition: any = {};
-    if (category) whereCondition.category.name = category;
+    if (category) {
+      whereCondition.category = {}; // suppose to declear whereCondition.category= {} for making Nest can understand that we have category propoty
+      whereCondition.category.name = category;
+    }
     const drinks = await this.drinkRepository.find({
       relations: ['category'],
       where: whereCondition,

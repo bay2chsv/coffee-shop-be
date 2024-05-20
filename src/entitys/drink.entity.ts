@@ -23,7 +23,8 @@ export class Drink {
   @Column({ name: 'image_url', nullable: false })
   imageUrl: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false }) //default is numberic ex 20
+  // @Column('decimal', { precision: 10, scale: 2, nullable: false }) ex 20.53
   price: number;
 
   @Column({ default: true })
