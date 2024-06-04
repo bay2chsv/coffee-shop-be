@@ -40,6 +40,16 @@ export class BillController {
   ) {
     return this.billService.getAllBill({ limit, page, id, timeFrom, timeTo });
   }
+  @Roles(Role.Admin, Role.Manager, Role.Employee)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('/bills/dashboard')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  getBillForDashBoard(
+    @Query('month') month: number,
+    @Query('year') year: number,
+  ) {
+    return this.billService.getAllBillForDashBoard(month, year);
+  }
 
   @Roles(Role.Admin, Role.Manager, Role.Employee)
   @UseGuards(AuthGuard, RolesGuard)

@@ -8,7 +8,7 @@ async function bootstrap() {
   initializeTransactionalContext();
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  app.enableCors();
+  app.enableCors(); //cors()
   await app.listen(5000);
 }
 bootstrap();

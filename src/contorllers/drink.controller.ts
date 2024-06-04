@@ -74,7 +74,7 @@ export class DrinkController {
     return this.drinkService.updateDrink(id, drinkRequest);
   }
 
-  @Roles(Role.Admin, Role.Manager)
+  @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @Delete('/drinks/:id')
   deleteCategory(@Param('id', ParseIntPipe) id: number) {

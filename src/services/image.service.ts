@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common/exceptions';
 import { rejects } from 'assert';
 import { resolve } from 'path';
 import { ImageResponse } from 'src/dtos/Response/ImageResponse.dto';
@@ -9,10 +10,15 @@ export class ImageService {
   constructor(private readonly firebaseService: FirebaseService) {}
 
   async uploadImage(file: Express.Multer.File): Promise<ImageResponse> {
+    if (!file) {
+      throw new BadRequestException(
+        'Sever get empty file', // status 400
+      );
+    }
     const acceptedFileTypes = ['image/jpeg', 'image/png'];
     // Check if the file type is in the accepted types array
     if (!acceptedFileTypes.includes(file.mimetype)) {
-      throw new Error(
+      throw new BadRequestException(
         'File type not supported. Only JPEG and PNG files are allowed.', // status 400
       );
     }

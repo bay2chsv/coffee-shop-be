@@ -27,6 +27,7 @@ export class AccountService {
     const skip = (page - 1) * take;
 
     const whereCondition: any = {};
+
     if (active !== undefined) whereCondition.isActive = active;
     if (block !== undefined) whereCondition.isBlock = block; // true and false
     if (email) whereCondition.email = email;
@@ -37,6 +38,7 @@ export class AccountService {
       take: take,
       skip: skip,
     });
+
     let accountResponses: AccountResponse[] = [];
 
     accounts.forEach((account) => {
@@ -52,6 +54,7 @@ export class AccountService {
     });
 
     const totalPage = Math.ceil(totalItem / take);
+
     const resultResponse: ResultResponse<AccountResponse[]> = {
       success: true,
       message: 'get all account',
@@ -90,25 +93,33 @@ export class AccountService {
     };
     return resultResponse;
   }
+  async updateRoleAccount(id: number, roleId: number) {
+    const account = await this.accountRepository.findOneBy({ id: id });
+    if (!account) {
+      throw new BadRequestException(`account id: ${id} not found`);
+    }
+    const role = await this.roleRepository.findOneBy({ id: roleId });
+    if (!role) {
+      throw new BadRequestException(`role id: ${id} not found`);
+    }
+    account.role = role;
+    await this.accountRepository.save(account);
+    const resultResponse: ResultResponse<string> = {
+      message: 'update role account successfully',
+      success: true,
+    };
+    return resultResponse;
+  }
   async handleBlockAccount(id: number, block: boolean) {
     const account = await this.accountRepository.findOneBy({ id: id });
     if (!account) {
       throw new BadRequestException(`account id: ${id} not found`);
     }
     account.isBlock = block;
-    const newAccount = await this.accountRepository.save(account);
-    const accountResponse: AccountResponse = {
-      id: newAccount.id,
-      fullName: newAccount.fullName,
-      email: newAccount.email,
-      isActive: newAccount.isActive,
-      isBlock: newAccount.isBlock,
-      role: { id: newAccount.role.id, name: newAccount.role.name },
-    };
-    const resultResponse: ResultResponse<AccountResponse> = {
-      message: 'block account',
+    await this.accountRepository.save(account);
+    const resultResponse: ResultResponse<string> = {
+      message: 'block account successfully',
       success: true,
-      data: accountResponse,
     };
     return resultResponse;
   }

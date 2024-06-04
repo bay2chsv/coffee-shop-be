@@ -13,7 +13,7 @@ import { CoffeeTable } from 'src/entitys/coffeeTable.entity';
 import { Between, LessThan, MoreThan, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 import { BillDetailService } from './billDetail.service';
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 @Injectable()
 export class BillService {
   constructor(
@@ -28,20 +28,16 @@ export class BillService {
     const take = query.limit || 10;
     const page = query.page || 1;
     const skip = (page - 1) * take;
-
     const id = query.id;
     const timeFrom = query.timeFrom;
     const timeTo = query.timeTo;
     const whereCondition: any = {};
     if (id) whereCondition.id = id;
     const today = new Date();
-    console.log(startOfDay(today));
-    console.log(endOfDay(today));
     whereCondition.createdAt = Between(startOfDay(today), endOfDay(today));
-
     if (timeFrom)
       whereCondition.createdAt = MoreThan(startOfDay(new Date(timeFrom)));
-    if (timeTo) whereCondition.create = LessThan(endOfDay(new Date(timeTo)));
+    if (timeTo) whereCondition.createdAt = LessThan(endOfDay(new Date(timeTo)));
     if (timeFrom && timeTo)
       whereCondition.createdAt = Between(
         startOfDay(timeFrom),
@@ -82,6 +78,45 @@ export class BillService {
     };
     return resultResponse;
   }
+
+  async getAllBillForDashBoard(
+    month: number,
+    year: number,
+  ): Promise<ResultResponse<BillResponse[]>> {
+    const whereCondition: any = {};
+    // import { startOfDay, endOfDay } from 'date-fns';
+    const date = new Date(year, month - 1);
+    whereCondition.createdAt = Between(startOfMonth(date), endOfMonth(date));
+
+    const bills = await this.billRepository.find({
+      relations: ['coffeeTable'],
+      where: whereCondition,
+    });
+
+    let response: BillResponse[] = [];
+    bills.forEach((item: Bill) => {
+      const coffeeTableResponse: CoffeeTableResponse = {
+        id: item.coffeeTable.id,
+        name: item.coffeeTable.name,
+      };
+      const billResponse: BillResponse = {
+        id: item.id,
+        total: item.total,
+        isCancel: item.isCancel,
+        createdAt: item.createdAt.getTime(),
+        coffeeTable: coffeeTableResponse,
+      };
+      response.push(billResponse);
+    });
+
+    const resultResponse: ResultResponse<BillResponse[]> = {
+      success: true,
+      message: 'get all bill',
+      data: response,
+    };
+    return resultResponse;
+  }
+
   async getBill(id: number): Promise<ResultResponse<BillDetailResponse>> {
     const bill = await this.billRepository.findOne({
       relations: ['coffeeTable'],
@@ -147,6 +182,7 @@ export class BillService {
         detailResponses.push(detailResponse);
       }),
     );
+
     const billResponse: BillResponse = {
       id: bill.id,
       total: bill.total,
@@ -159,6 +195,7 @@ export class BillService {
       bill: billResponse,
       billDetail: detailResponses,
     };
+
     const resultResponse: ResultResponse<BillDetailResponse> = {
       message: 'create bill and add detail successfly',
       data: billDetailResponse,

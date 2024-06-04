@@ -30,8 +30,10 @@ export class DrinkService {
 
     if (name) whereCondition.name = name;
     if (category) {
-      whereCondition.category = {};
-      whereCondition.category.name = category;
+      // whereCondition.category = {};
+      // whereCondition.category.name = category;
+
+      whereCondition.category = { name: category };
     }
     const [drinks, totalItem] = await this.drinkRepository.findAndCount({
       relations: ['category'],
@@ -159,12 +161,12 @@ export class DrinkService {
     };
     return resultResponse;
   }
-  async handleSellDrink(id: number, sell: boolean) {
+  async handleSellDrink(id: number, isSell: boolean) {
     const drink = await this.drinkRepository.findOneBy({ id: id });
     if (!drink) {
       throw new BadRequestException(`drink id: ${id} not found`);
     }
-    drink.isSell = sell;
+    drink.isSell = isSell;
     const newDrink = await this.drinkRepository.save(drink);
     const drinkResponse: DrinkResponse = {
       id: newDrink.id,
@@ -237,8 +239,13 @@ export class DrinkService {
       id: id,
     });
     if (!drink) {
-      throw new Error(`drink id ${id} not found`);
+      throw new BadRequestException(`drink id ${id} not found`);
     }
     this.drinkRepository.remove(drink);
+    const resultResponse: ResultResponse<string> = {
+      success: true,
+      message: 'delete drink successfully',
+    };
+    return resultResponse;
   }
 }

@@ -25,7 +25,6 @@ export class Account {
   isBlock: boolean;
   @Column({ default: false, name: 'is_active' })
   isActive: boolean;
-
   @ManyToOne(() => Role, (role) => role.accounts)
   @JoinColumn({ name: 'role_id' })
   role: Role;

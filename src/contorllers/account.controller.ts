@@ -64,12 +64,22 @@ export class AccountController {
 
   @Roles(Role.Admin, Role.Manager)
   @UseGuards(AuthGuard, RolesGuard)
-  @Patch('/accounts/:id')
+  @Patch('/accounts/block/:id')
   handleBlockAccount(
     @Param('id', ParseIntPipe) id: number,
     @Query('block', ParseBoolPipe) block: boolean,
   ) {
     return this.accountService.handleBlockAccount(id, block);
+  }
+
+  @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Patch('/accounts/update-role/:id')
+  updateRoleAccount(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('roleid', ParseIntPipe) roleId: number,
+  ) {
+    return this.accountService.updateRoleAccount(id, roleId);
   }
 
   @Roles(Role.Admin)
