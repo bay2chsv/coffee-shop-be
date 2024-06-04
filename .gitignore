@@ -13,7 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 
 #firebase
-.bay-new-coffee-firebase.json
+bay-new-coffee-firebase.json
 # OS
 .DS_Store
 
