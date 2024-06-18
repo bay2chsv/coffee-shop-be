@@ -229,7 +229,7 @@ export class DrinkService {
 
     const resultResponse: ResultResponse<DrinkResponse> = {
       success: true,
-      message: 'create drink successfully',
+      message: 'Update drink successfully',
       data: drinkResponse,
     };
     return resultResponse;

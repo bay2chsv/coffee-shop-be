@@ -37,14 +37,13 @@ export class AccountController {
     @Query('page') page: number,
     @Query('block') isBlock: boolean,
     @Query('email') email: string,
-    @Query('active') isActive: boolean,
   ) {
     return this.accountService.getAllAccount({
       limit,
       page,
       isBlock,
       email,
-      isActive,
+  
     });
   }
 

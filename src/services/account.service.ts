@@ -18,8 +18,8 @@ export class AccountService {
   async getAllAccount(query): Promise<ResultResponse<AccountResponse[]>> {
     let accounts: Account[] = [];
     let totalItem = 0;
-    const active = query.isActive;
-    const block = query.isBlock;
+
+    const isBlock = query.isBlock;
     const email = query.email;
 
     const take = query.limit || 5;
@@ -28,8 +28,7 @@ export class AccountService {
 
     const whereCondition: any = {};
 
-    if (active !== undefined) whereCondition.isActive = active;
-    if (block !== undefined) whereCondition.isBlock = block; // true and false
+    if (isBlock !== undefined) whereCondition.isBlock = isBlock; // true and false
     if (email) whereCondition.email = email;
 
     [accounts, totalItem] = await this.accountRepository.findAndCount({

@@ -29,12 +29,20 @@ export class BillService {
     const page = query.page || 1;
     const skip = (page - 1) * take;
     const id = query.id;
+    const isCancel = query.isCancel;
     const timeFrom = query.timeFrom;
     const timeTo = query.timeTo;
     const whereCondition: any = {};
-    if (id) whereCondition.id = id;
     const today = new Date();
+
     whereCondition.createdAt = Between(startOfDay(today), endOfDay(today));
+    if (id) {
+      whereCondition.id = id;
+    }
+    if (isCancel !== undefined) {
+      whereCondition.isCancel = isCancel;
+      whereCondition.createdAt = LessThan(endOfDay(today));
+    }
     if (timeFrom)
       whereCondition.createdAt = MoreThan(startOfDay(new Date(timeFrom)));
     if (timeTo) whereCondition.createdAt = LessThan(endOfDay(new Date(timeTo)));
@@ -156,6 +164,12 @@ export class BillService {
     if (!table) {
       throw new BadRequestException(
         `table id:${billRequest.coffeeTableId} not found`,
+      );
+    }
+    const current = new Date();
+    if (!(current.getHours() >= 7 && current.getHours() < 23)) {
+      throw new BadRequestException(
+        `System is closed now work daily on 7.00-23.00`,
       );
     }
 

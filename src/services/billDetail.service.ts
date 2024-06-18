@@ -22,7 +22,7 @@ export class BillDetailService {
       relations: ['drink'],
       where: { bill: bill },
     });
-    console.log(billDetails);
+
     let response: DetailResponse[] = [];
     billDetails.forEach((item: BillDetail) => {
       let drinkName = item.drink ? item.drink.name : 'This drink was deleted';

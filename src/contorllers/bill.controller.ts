@@ -37,8 +37,16 @@ export class BillController {
     @Query('id') id: number,
     @Query('timeform') timeFrom: Date,
     @Query('timeto') timeTo: Date,
+    @Query('cancel') isCancel: Boolean,
   ) {
-    return this.billService.getAllBill({ limit, page, id, timeFrom, timeTo });
+    return this.billService.getAllBill({
+      limit,
+      page,
+      id,
+      timeFrom,
+      timeTo,
+      isCancel,
+    });
   }
   @Roles(Role.Admin, Role.Manager, Role.Employee)
   @UseGuards(AuthGuard, RolesGuard)
