@@ -4,16 +4,15 @@ import { AccountRequest } from 'src/dtos/Request/accountRequest.dto';
 
 import { ResultResponse } from 'src/dtos/Response/ResultResponse.dto';
 import { Account } from 'src/entitys/account.entity';
-import { Role } from 'src/entitys/role.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'src/roleConfig/role.enum';
+import { AccountResponse } from 'src/dtos/Response/AccountResponse.dto';
 @Injectable()
 export class AccountService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
-    @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
   ) {}
   async getAllAccount(query): Promise<ResultResponse<AccountResponse[]>> {
     let accounts: Account[] = [];
@@ -32,13 +31,12 @@ export class AccountService {
     if (email) whereCondition.email = email;
 
     [accounts, totalItem] = await this.accountRepository.findAndCount({
-      relations: ['role'],
       where: whereCondition,
       take: take,
       skip: skip,
     });
 
-    let accountResponses: AccountResponse[] = [];
+    const accountResponses: AccountResponse[] = [];
 
     accounts.forEach((account) => {
       const accountResponse: AccountResponse = {
@@ -47,7 +45,7 @@ export class AccountService {
         email: account.email,
         isActive: account.isActive,
         isBlock: account.isBlock,
-        role: { id: account.role.id, name: account.role.name },
+        role: account.role,
       };
       accountResponses.push(accountResponse);
     });
@@ -68,7 +66,6 @@ export class AccountService {
 
   async getAccount(id: number) {
     const account = await this.accountRepository.findOne({
-      relations: ['role'],
       where: { id: id },
     });
     if (!account) {
@@ -80,10 +77,7 @@ export class AccountService {
       email: account.email,
       isBlock: account.isBlock,
       isActive: account.isActive,
-      role: {
-        id: account.role.id,
-        name: account.role.name,
-      },
+      role: account.role,
     };
     const resultResponse: ResultResponse<AccountResponse> = {
       message: 'get account',
@@ -92,16 +86,13 @@ export class AccountService {
     };
     return resultResponse;
   }
-  async updateRoleAccount(id: number, roleId: number) {
+  async updateRoleAccount(id: number, roleId: Role) {
     const account = await this.accountRepository.findOneBy({ id: id });
     if (!account) {
       throw new BadRequestException(`account id: ${id} not found`);
     }
-    const role = await this.roleRepository.findOneBy({ id: roleId });
-    if (!role) {
-      throw new BadRequestException(`role id: ${id} not found`);
-    }
-    account.role = role;
+
+    account.role = roleId;
     await this.accountRepository.save(account);
     const resultResponse: ResultResponse<string> = {
       message: 'update role account successfully',
@@ -123,12 +114,6 @@ export class AccountService {
     return resultResponse;
   }
   async createAccount(accountRequest: AccountRequest) {
-    const role = await this.roleRepository.findOneBy({
-      id: accountRequest.roleId,
-    });
-    if (!role) {
-      throw new BadRequestException('role not found');
-    }
     if (
       await this.accountRepository.existsBy({ email: accountRequest.email })
     ) {
@@ -140,7 +125,7 @@ export class AccountService {
       email: accountRequest.email,
       fullName: accountRequest.fullName,
       password: hash,
-      role: role,
+      role: accountRequest.roleId,
     });
     const newAccount = await this.accountRepository.save(Account);
 
@@ -150,10 +135,7 @@ export class AccountService {
       email: newAccount.email,
       isActive: newAccount.isActive,
       isBlock: newAccount.isBlock,
-      role: {
-        id: newAccount.role.id,
-        name: newAccount.role.name,
-      },
+      role: newAccount.role,
     };
     const resultResponse: ResultResponse<AccountResponse> = {
       success: true,

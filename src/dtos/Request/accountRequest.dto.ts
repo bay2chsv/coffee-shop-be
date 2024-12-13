@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { Role } from 'src/roleConfig/role.enum';
 export class AccountRequest {
   @IsEmail()
   @IsNotEmpty()
@@ -9,5 +10,5 @@ export class AccountRequest {
   @IsString()
   @IsNotEmpty()
   fullName: string;
-  roleId: number;
+  roleId: Role;
 }

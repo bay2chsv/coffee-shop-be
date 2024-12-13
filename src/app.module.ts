@@ -10,7 +10,6 @@ import { BillDetail } from './entitys/billDetail.entity';
 import { Category } from './entitys/category.entity';
 import { CoffeeTable } from './entitys/coffeeTable.entity';
 import { Drink } from './entitys/drink.entity';
-import { Role } from './entitys/role.entity';
 import { AccountModule } from './modules/account.module';
 import { BillModule } from './modules/bill.module';
 import { CategoryModule } from './modules/category.module';
@@ -29,15 +28,7 @@ import { ImageModule } from './modules/image.module';
           username: 'root',
           password: '123456',
           database: 'bk_coffeeshop',
-          entities: [
-            Account,
-            Role,
-            Bill,
-            BillDetail,
-            CoffeeTable,
-            Drink,
-            Category,
-          ],
+          entities: [Account, Bill, BillDetail, CoffeeTable, Drink, Category],
           synchronize: true,
         };
       },

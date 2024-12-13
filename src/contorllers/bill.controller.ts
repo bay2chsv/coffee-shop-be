@@ -37,7 +37,7 @@ export class BillController {
     @Query('id') id: number,
     @Query('timeform') timeFrom: Date,
     @Query('timeto') timeTo: Date,
-    @Query('cancel') isCancel: Boolean,
+    @Query('cancel') isCancel: boolean,
   ) {
     return this.billService.getAllBill({
       limit,

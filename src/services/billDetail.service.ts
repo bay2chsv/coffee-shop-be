@@ -23,10 +23,10 @@ export class BillDetailService {
       where: { bill: bill },
     });
 
-    let response: DetailResponse[] = [];
+    const response: DetailResponse[] = [];
     billDetails.forEach((item: BillDetail) => {
-      let drinkName = item.drink ? item.drink.name : 'This drink was deleted';
-      let detailResponse: DetailResponse = {
+      const drinkName = item.drink ? item.drink.name : 'This drink was deleted';
+      const detailResponse: DetailResponse = {
         id: item.id,
         price: item.price,
         amount: item.amount,

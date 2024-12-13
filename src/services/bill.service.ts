@@ -58,7 +58,7 @@ export class BillService {
       skip: skip,
     });
 
-    let response: BillResponse[] = [];
+    const response: BillResponse[] = [];
     bills.forEach((item: Bill) => {
       const coffeeTableResponse: CoffeeTableResponse = {
         id: item.coffeeTable.id,
@@ -101,7 +101,7 @@ export class BillService {
       where: whereCondition,
     });
 
-    let response: BillResponse[] = [];
+    const response: BillResponse[] = [];
     bills.forEach((item: Bill) => {
       const coffeeTableResponse: CoffeeTableResponse = {
         id: item.coffeeTable.id,
@@ -178,7 +178,7 @@ export class BillService {
       coffeeTable: table,
       createdAt: new Date(),
     });
-    let detailResponses: DetailResponse[] = [];
+    const detailResponses: DetailResponse[] = [];
 
     await Promise.all(
       // using Promise.all for waitting all the process in the loop successfully if don't use it detailResponses will return [] ()

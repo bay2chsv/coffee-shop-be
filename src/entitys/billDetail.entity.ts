@@ -3,8 +3,6 @@ import {
   Column,
   PrimaryGeneratedColumn,
   JoinColumn,
-  OneToMany,
-  CreateDateColumn,
   ManyToOne,
 } from 'typeorm';
 import { Bill } from './bill.entity';

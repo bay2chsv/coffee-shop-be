@@ -1,4 +1,6 @@
-class AccountResponse {
+import { Role } from 'src/roleConfig/role.enum';
+
+export class AccountResponse {
   id: number;
   fullName: string;
 
@@ -6,8 +8,5 @@ class AccountResponse {
   isActive: boolean;
   isBlock: boolean;
 
-  role: {
-    id: number;
-    name: string;
-  };
+  role: Role;
 }

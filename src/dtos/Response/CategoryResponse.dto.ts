@@ -1,4 +1,4 @@
-import { IsEmpty } from "class-validator";
+import { IsEmpty } from 'class-validator';
 
 export class CategoryResponse {
   id: number;

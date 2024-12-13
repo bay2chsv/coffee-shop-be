@@ -1,4 +1,3 @@
-import { IsEmpty } from 'class-validator';
 import { BillResponse } from './BillResponse.dto';
 import { DetailResponse } from './DeatailResponse.dto';
 

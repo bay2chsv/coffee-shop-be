@@ -8,27 +8,23 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Put,
   Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { get } from 'http';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/roleConfig/roles.decorator';
 import { Role } from 'src/roleConfig/role.enum';
-
 import { RolesGuard } from 'src/guards/roles.guard';
 import { AccountService } from 'src/services/account.service';
-import { blob } from 'stream/consumers';
 import { AccountRequest } from 'src/dtos/Request/accountRequest.dto';
 
 @Controller('api/v1')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
-  @Roles(Role.Admin, Role.Manager)
+  @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('/accounts')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -43,11 +39,10 @@ export class AccountController {
       page,
       isBlock,
       email,
-  
     });
   }
 
-  @Roles(Role.Admin, Role.Manager)
+  @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('/accounts/:id')
   getAccount(@Param('id', ParseIntPipe) id: number) {
@@ -61,7 +56,7 @@ export class AccountController {
     return this.accountService.createAccount(accountRequest);
   }
 
-  @Roles(Role.Admin, Role.Manager)
+  @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @Patch('/accounts/block/:id')
   handleBlockAccount(
@@ -76,7 +71,7 @@ export class AccountController {
   @Patch('/accounts/update-role/:id')
   updateRoleAccount(
     @Param('id', ParseIntPipe) id: number,
-    @Query('roleid', ParseIntPipe) roleId: number,
+    @Query('roleid') roleId: Role,
   ) {
     return this.accountService.updateRoleAccount(id, roleId);
   }

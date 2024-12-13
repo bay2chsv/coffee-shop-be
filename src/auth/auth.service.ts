@@ -1,25 +1,21 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountRequest } from 'src/dtos/Request/accountRequest.dto';
 import { AuthRequest } from 'src/dtos/Request/authRequest.dto';
 import { ResultResponse } from 'src/dtos/Response/ResultResponse.dto';
 import { Account } from 'src/entitys/account.entity';
-import { Role } from 'src/entitys/role.entity';
+
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ProfileRequest } from 'src/dtos/Request/profileRequest.dto';
 import { ProfileResponse } from 'src/dtos/Response/profileResponse.dto';
+import { AccountResponse } from 'src/dtos/Response/AccountResponse.dto';
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
-    @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     private jwtService: JwtService,
   ) {}
 
@@ -44,7 +40,7 @@ export class AuthService {
         id: account.id,
         email: account.email,
         fullName: account.fullName,
-        role: account.role.name,
+        role: account.role,
       },
     };
     account.isActive = true;
@@ -61,11 +57,6 @@ export class AuthService {
   }
 
   async signUp(accountRequest: AccountRequest) {
-    const deafaultRole = { id: 4, name: 'user' };
-    const role = await this.roleRepository.findOneBy(deafaultRole);
-    if (!role) {
-      throw new BadRequestException('role not found');
-    }
     const hash = await bcrypt.hash(accountRequest.password, 10);
     if (
       await this.accountRepository.existsBy({ email: accountRequest.email })
@@ -76,7 +67,6 @@ export class AuthService {
       email: accountRequest.email,
       fullName: accountRequest.fullName,
       password: hash,
-      role: role,
     });
     const newAccount = await this.accountRepository.save(Account);
 
@@ -86,10 +76,7 @@ export class AuthService {
       email: newAccount.email,
       isActive: newAccount.isActive,
       isBlock: newAccount.isBlock,
-      role: {
-        id: newAccount.role.id,
-        name: newAccount.role.name,
-      },
+      role: newAccount.role,
     };
     const resultResponse: ResultResponse<AccountResponse> = {
       success: true,

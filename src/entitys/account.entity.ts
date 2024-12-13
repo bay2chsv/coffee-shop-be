@@ -1,11 +1,5 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { Role } from './role.entity';
+import { Role } from 'src/roleConfig/role.enum';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Account {
@@ -25,7 +19,6 @@ export class Account {
   isBlock: boolean;
   @Column({ default: false, name: 'is_active' })
   isActive: boolean;
-  @ManyToOne(() => Role, (role) => role.accounts)
-  @JoinColumn({ name: 'role_id' })
+  @Column({ type: 'enum', default: Role.User, name: 'role' })
   role: Role;
 }
