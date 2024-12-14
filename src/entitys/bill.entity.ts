@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { BillDetail } from './billDetail.entity';
 import { CoffeeTable } from './coffeeTable.entity';
-import { Drink } from './drink.entity';
 
 @Entity()
 export class Bill {

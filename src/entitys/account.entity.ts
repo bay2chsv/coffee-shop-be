@@ -19,6 +19,6 @@ export class Account {
   isBlock: boolean;
   @Column({ default: false, name: 'is_active' })
   isActive: boolean;
-  @Column({ type: 'enum', default: Role.User, name: 'role' })
+  @Column({ type: 'enum', enum: Role, default: Role.User, name: 'role' })
   role: Role;
 }

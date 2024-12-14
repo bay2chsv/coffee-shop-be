@@ -21,7 +21,6 @@ export class AuthService {
 
   async signIn(authRequest: AuthRequest) {
     const account = await this.accountRepository.findOne({
-      relations: ['role'],
       where: { email: authRequest.email },
     });
     if (!account)
@@ -101,15 +100,7 @@ export class AuthService {
   }
 
   async updateProfile(user, profileRequest: ProfileRequest) {
-    const { id, email, fullName } = user.info;
-    if (
-      email === profileRequest.email &&
-      fullName === profileRequest.fullName
-    ) {
-      throw new BadRequestException(
-        `are you sure you change something? it's all look same`,
-      );
-    }
+    const { id } = user.info;
     const account = await this.accountRepository.findOneBy({ id: id });
     if (!account) throw new BadRequestException('account not found');
     account.email = profileRequest.email;
