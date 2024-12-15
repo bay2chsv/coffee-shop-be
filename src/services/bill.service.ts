@@ -14,6 +14,7 @@ import { Between, LessThan, MoreThan, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 import { BillDetailService } from './billDetail.service';
 import { startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { ResponseFormatter } from 'src/utils/ResponseFormatter';
 @Injectable()
 export class BillService {
   constructor(
@@ -57,34 +58,22 @@ export class BillService {
       take: take,
       skip: skip,
     });
-
-    const response: BillResponse[] = [];
-    bills.forEach((item: Bill) => {
-      const coffeeTableResponse: CoffeeTableResponse = {
-        id: item.coffeeTable.id,
-        name: item.coffeeTable.name,
-      };
-      const billResponse: BillResponse = {
-        id: item.id,
-        total: item.total,
-        isCancel: item.isCancel,
-        createdAt: item.createdAt.getTime(),
-        coffeeTable: coffeeTableResponse,
-      };
-      response.push(billResponse);
-    });
-
     const totalPage = Math.ceil(totalItem / take);
-    const resultResponse: ResultResponse<BillResponse[]> = {
-      success: true,
-      message: 'get all bill',
-      data: response,
-      totalItem: totalItem,
-      totalPage: totalPage,
-      limit: take,
-      page: page,
-    };
-    return resultResponse;
+
+    const billResponses = bills.map((account) =>
+      this.mapToBillResponse(account),
+    );
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetched all accounts',
+      billResponses,
+      {
+        page,
+        limit: take,
+        totalItem,
+        totalPage: totalPage,
+      },
+    );
   }
 
   async getAllBillForDashBoard(
@@ -101,28 +90,14 @@ export class BillService {
       where: whereCondition,
     });
 
-    const response: BillResponse[] = [];
-    bills.forEach((item: Bill) => {
-      const coffeeTableResponse: CoffeeTableResponse = {
-        id: item.coffeeTable.id,
-        name: item.coffeeTable.name,
-      };
-      const billResponse: BillResponse = {
-        id: item.id,
-        total: item.total,
-        isCancel: item.isCancel,
-        createdAt: item.createdAt.getTime(),
-        coffeeTable: coffeeTableResponse,
-      };
-      response.push(billResponse);
-    });
-
-    const resultResponse: ResultResponse<BillResponse[]> = {
-      success: true,
-      message: 'get all bill',
-      data: response,
-    };
-    return resultResponse;
+    const billResponses = bills.map((account) =>
+      this.mapToBillResponse(account),
+    );
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetched all accounts',
+      billResponses,
+    );
   }
 
   async getBill(id: number): Promise<ResultResponse<BillDetailResponse>> {
@@ -133,25 +108,20 @@ export class BillService {
     if (!bill) {
       throw new BadRequestException(`this id:${id} not found`);
     }
-    const billResponse: BillResponse = {
-      id: bill.id,
-      total: bill.total,
-      isCancel: bill.isCancel,
-      createdAt: bill.createdAt.getTime(),
-      coffeeTable: bill.coffeeTable,
-    };
+    const billResponse = this.mapToBillResponse(bill);
+
     const detailResponse: DetailResponse[] =
       await this.billDetailService.getBillDetail(bill);
+
     const billDetailResponse: BillDetailResponse = {
       bill: billResponse,
       billDetail: detailResponse,
     };
-    const response: ResultResponse<BillDetailResponse> = {
-      message: 'get Bill detail.',
-      success: true,
-      data: billDetailResponse,
-    };
-    return response;
+    return ResponseFormatter.formatResponse(
+      true,
+      'get Bill detail',
+      billDetailResponse,
+    );
   }
 
   @Transactional()
@@ -181,7 +151,6 @@ export class BillService {
     const detailResponses: DetailResponse[] = [];
 
     await Promise.all(
-      // using Promise.all for waitting all the process in the loop successfully if don't use it detailResponses will return [] ()
       billRequest.detail.map(async (item) => {
         const billDetail = await this.billDetailService.createBillDetail(
           bill,
@@ -197,25 +166,18 @@ export class BillService {
       }),
     );
 
-    const billResponse: BillResponse = {
-      id: bill.id,
-      total: bill.total,
-      isCancel: bill.isCancel,
-      createdAt: bill.createdAt.getTime(),
-      coffeeTable: bill.coffeeTable,
-    };
+    const billResponse = this.mapToBillResponse(bill);
 
     const billDetailResponse: BillDetailResponse = {
       bill: billResponse,
       billDetail: detailResponses,
     };
 
-    const resultResponse: ResultResponse<BillDetailResponse> = {
-      message: 'create bill and add detail successfly',
-      data: billDetailResponse,
-      success: true,
-    };
-    return resultResponse;
+    return ResponseFormatter.formatResponse(
+      true,
+      'get Bill detail',
+      billDetailResponse,
+    );
   }
   async cancelBill(id: number, isCancel: boolean) {
     const bill = await this.billRepository.findOneBy({ id: id });
@@ -224,19 +186,13 @@ export class BillService {
     }
     bill.isCancel = isCancel;
     const cancelBill = await this.billRepository.save(bill);
-    const billResponse: BillResponse = {
-      id: cancelBill.id,
-      total: cancelBill.total,
-      isCancel: cancelBill.isCancel,
-      createdAt: cancelBill.createdAt.getTime(),
-      coffeeTable: cancelBill.coffeeTable,
-    };
-    const resultResponse: ResultResponse<BillResponse> = {
-      message: 'create bill and add detail successfly',
-      data: billResponse,
-      success: true,
-    };
-    return resultResponse;
+    const billResponse = this.mapToBillResponse(cancelBill);
+
+    return ResponseFormatter.formatResponse(
+      true,
+      'cancel bill and add detail successfly',
+      billResponse,
+    );
   }
   async deleteBill(id: number) {
     const bill = await this.billRepository.findOneBy({ id: id });
@@ -247,10 +203,21 @@ export class BillService {
       throw new BadRequestException('Only cancel bill can be deleted');
     }
     await this.billRepository.remove(bill);
-    const resultResponse: ResultResponse<string> = {
-      message: 'delete successfully',
-      success: true,
+    return ResponseFormatter.formatResponse(true, 'delete successfully');
+  }
+  private mapToCoffeeTableResponse(table: CoffeeTable): CoffeeTableResponse {
+    return {
+      id: table.id,
+      name: table.name,
     };
-    return resultResponse;
+  }
+  private mapToBillResponse(bill: Bill): BillResponse {
+    return {
+      id: bill.id,
+      total: bill.total,
+      isCancel: bill.isCancel,
+      createdAt: bill.createdAt.getTime(),
+      coffeeTable: this.mapToCoffeeTableResponse(bill.coffeeTable),
+    };
   }
 }

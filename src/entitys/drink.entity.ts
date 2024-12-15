@@ -11,9 +11,6 @@ import { Category } from './category.entity';
 
 @Entity()
 export class Drink {
-  forEach(arg0: (item: any) => void) {
-    throw new Error('Method not implemented.');
-  }
   @PrimaryGeneratedColumn()
   id: number;
 

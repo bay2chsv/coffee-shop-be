@@ -10,8 +10,6 @@ import {
   Put,
   Query,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { Body } from '@nestjs/common/decorators/http/route-params.decorator';
 import { DrinkRequest } from 'src/dtos/Request/drinkRequest.dto';
@@ -26,7 +24,6 @@ export class DrinkController {
   constructor(private drinkService: DrinkService) {}
 
   @Get('/drinks')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllCategory(
     @Query('limit') limit: number,
     @Query('page') page: number,
@@ -37,7 +34,6 @@ export class DrinkController {
   }
 
   @Get('/drinks/all')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllDrinkForEmployee(@Query('category') category: string) {
     return this.drinkService.getAllDrinkForEmployee({ category });
   }
@@ -61,7 +57,8 @@ export class DrinkController {
     @Param('id', ParseIntPipe) id: number,
     @Query('sell', ParseBoolPipe) sell: boolean,
   ) {
-    return this.drinkService.handleSellDrink(id, sell);
+    console.log('ID:', id, 'Sell:', sell);
+    return this.drinkService.handleBlockDrink(id, sell);
   }
 
   @Roles(Role.Admin, Role.Manager)

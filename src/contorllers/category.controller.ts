@@ -1,18 +1,13 @@
 import {
-  BadRequestException,
   Controller,
-  DefaultValuePipe,
   Delete,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
-  Put,
   Query,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
@@ -26,7 +21,6 @@ export class CategoryController {
   constructor(private categoryService: CategoryService) {}
 
   @Get('/categories')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllCategory(
     @Query('limit') limit: number,
     @Query('page') page: number,

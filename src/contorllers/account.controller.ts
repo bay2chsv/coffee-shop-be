@@ -10,8 +10,6 @@ import {
   Post,
   Query,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/roleConfig/roles.decorator';
@@ -27,7 +25,6 @@ export class AccountController {
   @Roles(Role.Admin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('/accounts')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllAccount(
     @Query('limit') limit: number,
     @Query('page') page: number,

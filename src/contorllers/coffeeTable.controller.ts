@@ -8,8 +8,6 @@ import {
   Post,
   Query,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 
 import { CoffeeTableService } from 'src/services/coffeeTable.service';
@@ -22,7 +20,6 @@ export class CoffeeTableController {
   constructor(private coffeeTableService: CoffeeTableService) {}
 
   @Get('/coffeetables')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllCategory(
     @Query('limit') limit: number,
     @Query('page') page: number,

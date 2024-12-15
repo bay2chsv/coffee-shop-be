@@ -5,11 +5,11 @@ import { CategoryResponse } from 'src/dtos/Response/CategoryResponse.dto';
 import { DrinkResponse } from 'src/dtos/Response/DrinkResponse.dto';
 
 import { ResultResponse } from 'src/dtos/Response/ResultResponse.dto';
-import { BillDetail } from 'src/entitys/billDetail.entity';
 import { Category } from 'src/entitys/category.entity';
 
 import { Drink } from 'src/entitys/drink.entity';
-import { Like, Repository } from 'typeorm';
+import { ResponseFormatter } from 'src/utils/ResponseFormatter';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DrinkService {
@@ -30,9 +30,6 @@ export class DrinkService {
 
     if (name) whereCondition.name = name;
     if (category) {
-      // whereCondition.category = {};
-      // whereCondition.category.name = category;
-
       whereCondition.category = { name: category };
     }
     const [drinks, totalItem] = await this.drinkRepository.findAndCount({
@@ -41,30 +38,21 @@ export class DrinkService {
       take: take,
       skip: skip,
     });
-
-    let drinkResponses: DrinkResponse[] = [];
-    drinks.forEach((item) => {
-      let drinkResponse: DrinkResponse = {
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        imageUrl: item.imageUrl,
-        price: item.price,
-      };
-      drinkResponses.push(drinkResponse);
-    });
-
     const totalPage = Math.ceil(totalItem / take);
-    const resultResponse: ResultResponse<DrinkResponse[]> = {
-      success: true,
-      message: 'get all drink',
-      data: drinkResponses,
-      totalItem: totalItem,
-      totalPage: totalPage,
-      limit: take,
-      page: page,
-    };
-    return resultResponse;
+    const drinkResponses = drinks.map((drink) =>
+      this.mapToDrinkResponse(drink),
+    );
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetching drink responses',
+      drinkResponses,
+      {
+        page,
+        limit: take,
+        totalItem,
+        totalPage: totalPage,
+      },
+    );
   }
   async getAllDrinkForEmployee(
     query,
@@ -72,7 +60,7 @@ export class DrinkService {
     const category = query.category;
     const whereCondition: any = {};
     if (category) {
-      whereCondition.category = {}; // suppose to declear whereCondition.category= {} for making Nest can understand that we have category propoty
+      whereCondition.category = {};
       whereCondition.category.name = category;
     }
     const drinks = await this.drinkRepository.find({
@@ -80,24 +68,14 @@ export class DrinkService {
       where: whereCondition,
     });
 
-    let drinkResponses: DrinkResponse[] = [];
-    drinks.forEach((item) => {
-      let drinkResponse: DrinkResponse = {
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        imageUrl: item.imageUrl,
-        price: item.price,
-      };
-      drinkResponses.push(drinkResponse);
-    });
-
-    const resultResponse: ResultResponse<DrinkResponse[]> = {
-      success: true,
-      message: 'get all drink for employee',
-      data: drinkResponses,
-    };
-    return resultResponse;
+    const drinkResponses = drinks.map((drink) =>
+      this.mapToDrinkResponse(drink),
+    );
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetching drink responses dashboard',
+      drinkResponses,
+    );
   }
   async getDrink(id: number) {
     const drink = await this.drinkRepository.findOne({
@@ -105,27 +83,18 @@ export class DrinkService {
       where: { id: id },
     });
     if (!drink) throw new BadRequestException(`this ${id} not found`);
-    const drinkResponse: DrinkResponse = {
-      id: drink.id,
-      imageUrl: drink.imageUrl,
-      name: drink.name,
-      price: drink.price,
-      category: drink.category,
-    };
-    const response: ResultResponse<DrinkResponse> = {
-      success: true,
-      message: 'get drink successfully',
-      data: drinkResponse,
-    };
-    return response;
+    const drinkResponse = this.mapToDrinkResponse(drink);
+    return ResponseFormatter.formatResponse(
+      true,
+      'get Drink Response',
+      drinkResponse,
+    );
   }
   async createDrink(drinkRequest: DrinkRequest) {
-    if (await this.drinkRepository.existsBy({ name: drinkRequest.name })) {
-      throw new BadRequestException('this name is already used');
-    }
-    if (
-      !(await this.categoryRepository.existsBy({ id: drinkRequest.categoryId }))
-    ) {
+    const category = await this.categoryRepository.findOneBy({
+      id: drinkRequest.categoryId,
+    });
+    if (!category) {
       throw new BadRequestException(
         `Something wrong with category please watched back your category`,
       );
@@ -133,54 +102,36 @@ export class DrinkService {
     if (drinkRequest.price <= 0) {
       throw new BadRequestException(`prince must be bigger than 0`);
     }
-    const category = await this.categoryRepository.findOneBy({
-      id: drinkRequest.categoryId,
-    });
+
     const drink = await this.drinkRepository.save({
       name: drinkRequest.name,
       price: drinkRequest.price,
       imageUrl: drinkRequest.imageUrl,
       category: category,
     });
-    const categoryResponse: CategoryResponse = {
-      id: category.id,
-      name: category.name,
-    };
-    const drinkResponse: DrinkResponse = {
-      id: drink.id,
-      name: drink.name,
-      price: drink.price,
-      imageUrl: drink.imageUrl,
-      category: categoryResponse,
-    };
-
-    const resultResponse: ResultResponse<DrinkResponse> = {
-      success: true,
-      message: 'create drink successfully',
-      data: drinkResponse,
-    };
-    return resultResponse;
+    const drinkResponse = this.mapToDrinkResponse(drink);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Create Drink Response',
+      drinkResponse,
+    );
   }
-  async handleSellDrink(id: number, isSell: boolean) {
-    const drink = await this.drinkRepository.findOneBy({ id: id });
+  async handleBlockDrink(id: number, isSell: boolean) {
+    const drink = await this.drinkRepository.findOne({
+      relations: ['category'],
+      where: { id: id },
+    });
     if (!drink) {
       throw new BadRequestException(`drink id: ${id} not found`);
     }
     drink.isSell = isSell;
     const newDrink = await this.drinkRepository.save(drink);
-    const drinkResponse: DrinkResponse = {
-      id: newDrink.id,
-      name: newDrink.name,
-      imageUrl: newDrink.imageUrl,
-      price: newDrink.price,
-      category: newDrink.category,
-    };
-    const resultResponse: ResultResponse<DrinkResponse> = {
-      message: 'update drink',
-      success: true,
-      data: drinkResponse,
-    };
-    return resultResponse;
+    const drinkResponse = this.mapToDrinkResponse(newDrink);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Block Drink Response',
+      drinkResponse,
+    );
   }
 
   async updateDrink(id: number, drinkRequest: DrinkRequest) {
@@ -193,11 +144,6 @@ export class DrinkService {
     });
     if (!drink) {
       throw new Error(`drink id ${id} not found`);
-    }
-    if (!(drink.name === drinkRequest.name)) {
-      if (await this.drinkRepository.existsBy({ name: drinkRequest.name })) {
-        throw new Error(`${drinkRequest.name} name is already used`);
-      }
     }
     const category = await this.categoryRepository.findOneBy({
       id: drinkRequest.categoryId,
@@ -215,26 +161,14 @@ export class DrinkService {
       imageUrl: drinkRequest.imageUrl,
       category: category,
     });
-    const categoryResponse: CategoryResponse = {
-      id: newDrink.category.id,
-      name: newDrink.category.name,
-    };
-    const drinkResponse: DrinkResponse = {
-      id: newDrink.id,
-      name: newDrink.name,
-      price: newDrink.price,
-      imageUrl: newDrink.imageUrl,
-      category: categoryResponse,
-    };
-
-    const resultResponse: ResultResponse<DrinkResponse> = {
-      success: true,
-      message: 'Update drink successfully',
-      data: drinkResponse,
-    };
-    return resultResponse;
+    const drinkResponse = this.mapToDrinkResponse(newDrink);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Update Drink Response',
+      drinkResponse,
+    );
   }
-  async deleteDrink(id: number) {
+  async deleteDrink(id: number): Promise<ResultResponse<string>> {
     const drink = await this.drinkRepository.findOneBy({
       id: id,
     });
@@ -242,10 +176,22 @@ export class DrinkService {
       throw new BadRequestException(`drink id ${id} not found`);
     }
     this.drinkRepository.remove(drink);
-    const resultResponse: ResultResponse<string> = {
-      success: true,
-      message: 'delete drink successfully',
+    return ResponseFormatter.formatResponse(true, 'Remove Drink Response');
+  }
+  private mapToCategoryResponse(category: Category): CategoryResponse {
+    return {
+      id: category.id,
+      name: category.name,
     };
-    return resultResponse;
+  }
+  private mapToDrinkResponse(drink: Drink): DrinkResponse {
+    return {
+      id: drink.id,
+      name: drink.name,
+      imageUrl: drink.imageUrl,
+      price: drink.price,
+      isSell: drink.isSell,
+      category: this.mapToCategoryResponse(drink.category),
+    };
   }
 }

@@ -5,5 +5,6 @@ export class DrinkResponse {
   name: string;
   imageUrl: string;
   price: number;
+  isSell: boolean;
   category: CategoryResponse;
 }

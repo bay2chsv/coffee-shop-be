@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
-import { rejects } from 'assert';
-import { resolve } from 'path';
 import { ImageResponse } from 'src/dtos/Response/ImageResponse.dto';
 import { FirebaseService } from './firebase.service';
 

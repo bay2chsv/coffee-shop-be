@@ -1,11 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { async } from 'rxjs';
 import { CategoryResponse } from 'src/dtos/Response/CategoryResponse.dto';
 
 import { ResultResponse } from 'src/dtos/Response/ResultResponse.dto';
 import { Category } from 'src/entitys/category.entity';
-import { Drink } from 'src/entitys/drink.entity';
+import { ResponseFormatter } from 'src/utils/ResponseFormatter';
 
 import { Repository } from 'typeorm';
 
@@ -29,39 +28,43 @@ export class CategoryService {
       take: take,
       skip: skip,
     });
-    let categoryList: CategoryResponse[] = [];
+    const categoryList: CategoryResponse[] = [];
 
     categorys.forEach((item) => {
-      let categoryResponse: CategoryResponse = { id: item.id, name: item.name };
+      const categoryResponse: CategoryResponse = {
+        id: item.id,
+        name: item.name,
+      };
       categoryList.push(categoryResponse);
     });
 
     const totalPage = Math.ceil(totalItem / take);
-    const resultResponse: ResultResponse<CategoryResponse[]> = {
-      success: true,
-      message: 'get all category',
-      data: categoryList,
-      totalItem: totalItem,
-      totalPage: totalPage,
-      limit: take,
-      page: page,
-    };
-    return resultResponse;
+    const categoryResponse = categorys.map((category) =>
+      this.mapToCategoryResponse(category),
+    );
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetched all categories',
+      categoryResponse,
+      {
+        page,
+        limit: take,
+        totalItem,
+        totalPage: totalPage,
+      },
+    );
   }
 
   async getCategory(id: number) {
     const category = await this.categoryRepository.findOneBy({ id: id });
     if (!category) throw new BadRequestException(`this ${id} is not found`);
-    const categoryResponse: CategoryResponse = {
-      id: category.id,
-      name: category.name,
-    };
-    const response: ResultResponse<CategoryResponse> = {
-      success: true,
-      message: 'get Category successfully',
-      data: categoryResponse,
-    };
-    return response;
+
+    const categoryResponse = this.mapToCategoryResponse(category);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Fetched get category',
+      categoryResponse,
+    );
   }
 
   async createCategory(name: string) {
@@ -73,46 +76,30 @@ export class CategoryService {
     }
     // const category = this.categoryRepository.create();
     const category = await this.categoryRepository.save({ name: name });
-    const categoryResponse: CategoryResponse = {
-      id: category.id,
-      name: category.name,
-    };
-    const response: ResultResponse<CategoryResponse> = {
-      message: 'create successfully',
-      success: true,
-      data: categoryResponse,
-    };
-    return response;
+    const categoryResponse = this.mapToCategoryResponse(category);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Create category',
+      categoryResponse,
+    );
   }
   async updateCategory(id: number, name: string) {
-    if (!name) {
-      throw new BadRequestException('Param is null');
-    }
-    let category = await this.categoryRepository.findOneBy({ id: id });
+    const category = await this.categoryRepository.findOneBy({ id: id });
     if (!category) {
       throw new BadRequestException(`category id: ${id} not found`);
     }
-    if (!(category.name === name)) {
-      if (await this.categoryRepository.existsBy({ name: name })) {
-        throw new BadRequestException('this name is already used');
-      }
+    if (!name) {
+      throw new BadRequestException('Param is null');
     }
-    //  category = { ...category, name: name };  Creating a new object with updated name
     category.name = name;
-    //category.name = name; simply  Updating the name property of the existing object
-    const upadteCategory = await this.categoryRepository.save(category);
+    await this.categoryRepository.save(category);
 
-    const categoryResponse: CategoryResponse = {
-      id: upadteCategory.id,
-      name: upadteCategory.name,
-    };
-
-    const response: ResultResponse<CategoryResponse> = {
-      success: true,
-      message: 'update successfully',
-      data: categoryResponse,
-    };
-    return response;
+    const categoryResponse = this.mapToCategoryResponse(category);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Update category',
+      categoryResponse,
+    );
   }
 
   async deleteCategory(id: number) {
@@ -124,10 +111,17 @@ export class CategoryService {
       throw new BadRequestException(`category id:${id} not found`);
     }
     await this.categoryRepository.remove(category);
-    const response: ResultResponse<string> = {
-      success: true,
-      message: 'delete category successfully',
+    const categoryResponse = this.mapToCategoryResponse(category);
+    return ResponseFormatter.formatResponse(
+      true,
+      'Remove category',
+      categoryResponse,
+    );
+  }
+  private mapToCategoryResponse(category: Category): CategoryResponse {
+    return {
+      id: category.id,
+      name: category.name,
     };
-    return response;
   }
 }

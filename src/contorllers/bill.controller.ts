@@ -30,7 +30,6 @@ export class BillController {
   @Roles(Role.Admin, Role.Manager, Role.Employee)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('/bills')
-  @UsePipes(new ValidationPipe({ transform: true }))
   getAllBill(
     @Query('limit') limit: number,
     @Query('page') page: number,
